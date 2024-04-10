@@ -26,6 +26,7 @@ function App() {
         await axios.put(presignedUrl, file, {
           headers: {
             'Content-Type': file.type,
+            'x-amz-acl': 'private'
           },
         });
         alert('File successfully uploaded!');
