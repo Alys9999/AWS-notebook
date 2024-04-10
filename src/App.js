@@ -11,7 +11,6 @@ function App() {
         alert('Please select a file first.');
         return;
     }
-s
     try {
         const presignResponse = await axios.post('https://1ie9pc397c.execute-api.us-east-1.amazonaws.com/prod/', {
             fileName: file.name,
@@ -19,6 +18,8 @@ s
         });
 
         const { url } = presignResponse.data;
+
+        console.log(url)
 
         await axios.put(url, file, {
             headers: {
@@ -29,7 +30,7 @@ s
         alert('File successfully uploaded!');
     } catch (error) {
         console.error('Upload failed:', error);
-        alert('Upload failed. Please try again.');
+        alert('Upload failed. Please try again.' + error);
     }
 };
 
@@ -58,7 +59,7 @@ s
         </div>
         <div style={{ marginBottom: '20px' }}>
           <label htmlFor="fileInput" style={{ display: 'block', marginBottom: '5px' }}>File Input:</label>
-          <input value={file} onChange={handleFileChange} type="file" id="fileInput" name="fileInput" required style={{ width: '100%' }} />
+          <input onChange={handleFileChange} type="file" id="fileInput" name="fileInput" required style={{ width: '100%' }} />
         </div>
         <button type="submit" style={{ cursor: 'pointer' }}>Submit</button>
       </form>
