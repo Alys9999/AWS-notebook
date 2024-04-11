@@ -3,18 +3,23 @@ import axios from 'axios';
 
 function App() {
   const formRef = useRef(null);
+  const [text, setText] = useState('');
   const [file, setFile] = useState(null);
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
   };
 
+  const handleTextChane = (e) =>{
+    setText(e.target.value);
+  }
+
     const getPresignedUrl = async (fileName, fileType) => {
       try {
         const response = await axios.post('https://1ie9pc397c.execute-api.us-east-1.amazonaws.com/prod/get-presigned-url', {
           fileName: fileName,
           fileType: fileType,
-        });
+        },{headers:{'Content-Type': 'application/json',}});
         return response.data.url; 
       } catch (error) {
         throw new Error('Failed to get presigned URL: ' + error.message);
@@ -26,12 +31,30 @@ function App() {
         await axios.put(presignedUrl, file, {
           headers: {
             'Content-Type': file.type,
-            'x-amz-acl': 'private'
           },
         });
         alert('File successfully uploaded!');
       } catch (error) {
-        throw new Error('Upload failed: ' + error.message);
+        console.log(error);
+        throw new Error('Upload failed: ' + error);
+      }
+    };
+
+    const sendDataToDynamoDB = async (fileName, text) => {
+      try {
+        console.log('sending data to dynamodb')
+        await axios.post('https://1ie9pc397c.execute-api.us-east-1.amazonaws.com/prod/data', {
+          fileName,
+          inputText: text,
+        }, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        alert('Data successfully saved to DynamoDB!');
+      } catch (error) {
+        console.error('Failed to save data to DynamoDB:', error);
+        throw new Error('Failed to save data to DynamoDB: ' + error.message);
       }
     };
 
@@ -44,9 +67,8 @@ function App() {
 
       try {
         const url = await getPresignedUrl(file.name, file.type);
-        console.log(url);
-        console.log(file.type);
         await uploadFileToS3(url, file);
+        await sendDataToDynamoDB(file.name, text);
       } catch (error) {
         console.error(error.message);
         alert(error.message);
@@ -70,7 +92,7 @@ function App() {
       <form ref={formRef} onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '400px' }}>
         <div style={{ marginBottom: '20px' }}>
           <label htmlFor="textInput" style={{ display: 'block', marginBottom: '5px' }}>Text Input:</label>
-          <input type="text" id="textInput" name="textInput" required style={{ width: '100%' }} />
+          <input value={text} onChange={handleTextChane} type="text" id="textInput" name="textInput" required style={{ width: '100%' }} />
         </div>
         <div style={{ marginBottom: '20px' }}>
           <label htmlFor="fileInput" style={{ display: 'block', marginBottom: '5px' }}>File Input:</label>
